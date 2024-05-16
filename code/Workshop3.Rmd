@@ -1,8 +1,8 @@
 ---
 title: "MB5370 Module 04. Workshop 3 - Data Wrangling"
-author: "Ben Cresswell"
+author: "Nicole Welch"
 output: html_document
-date: "2024-03-22"
+date: "2024-05-16"
 ---
 
 ```{r setup, include=FALSE}
@@ -14,3 +14,267 @@ knitr::opts_chunk$set(echo = TRUE)
 ```{r}
 ## install.packages("tidyverse") # Delete this line once installed
 library("tidyverse")
+```
+
+```{r tidr}
+# Example of a tidy table 
+#> # A tibble: 6 × 4
+#>   country      year  cases population
+#>   <chr>       <int>  <int>      <int>
+#> 1 Afghanistan  1999    745   19987071
+#> 2 Afghanistan  2000   2666   20595360
+#> 3 Brazil       1999  37737  172006362
+#> 4 Brazil       2000  80488  174504898
+#> 5 China        1999 212258 1272915272
+#> 6 China        2000 213766 1280428583
+
+#Table one is the only data set that is tidy
+
+#How we make our data set tidy is by following three interrelated rules:
+    #Each variable must have its own column.
+    #Each observation must have its own row.
+    #Each value must have its own cell.
+
+# %>%
+
+#A pipe is really only designed to help you better understand what the code is doing. It takes the data (left of the pipe) and applies the function (right of pipe). In todays workshop we’ll use both %>%, and |>  which achieve the exact same thing (|> is brand new in base R, %>% only works in tidyr and magrittr packages)
+
+# Compute rate per 10,000
+table1 %>% 
+  mutate(rate = cases / population * 10000)
+
+# Compute cases per year
+table1 %>% 
+  count(year, wt = cases)
+
+# Visualise changes over time
+library(ggplot2)
+ggplot(table1, aes(year, cases)) + 
+  geom_line(aes(group = country), colour = "grey50") + 
+  geom_point(aes(colour = country))
+    
+```
+
+# Pivoting Data
+
+The first step in tidying the data is to understand what each variable and observation actually means. Sometimes this is obvious and sometimes you’ll need to consult with the person(s) who collected the data. 
+
+Once you understand the data you’re looking at, the second step is to resolve one of the two common problems with untidy data. These are:
+1. One variable is spread across multiple columns
+2. One observation is scattered across multiple rows
+
+pivot_longer() makes data sets “longer” by increasing the number of rows and decreasing the number of columns, solving those common problems of data values in the variable name (e.g wk1, wk2, wk3, etc.).
+
+Using  pivot_longer() splits the data set by column, and reformat it into the tidy format of observations as rows, columns as variables and values as cell entries.
+
+
+```{r pivot}
+billboard |> 
+  pivot_longer(
+    cols = starts_with("wk"), 
+    names_to = "week", 
+    values_to = "rank"
+  )
+#As you can see in the above code snippet, there are three key arguments to the pivot_longer() function:
+# 1. cols which specifies the columns you want to pivot (the ones that aren’t variables). Note: you could either use !c(artist, track, date.entered) OR starts_with('wk') because the cols argument uses the same syntax as select().
+# 2. names_to which names the variable stored in the column names. We chose to name that variable week.
+# 3. values_to which names the variable stored in the cell values that we named rank
+
+#  Ask pivot_longer to remove N/A by adding the argument values_drop_na = TRUE as shown below:
+
+billboard |> 
+  pivot_longer(
+    cols = starts_with("wk"), 
+    names_to = "week", 
+    values_to = "rank",
+    values_drop_na = TRUE
+  )
+```
+
+# Pivoting Longer
+``` { r pivoting longer}
+
+# Example 
+
+df <- tribble(
+  ~id,  ~bp1, ~bp2,
+   "A",  100,  120,
+   "B",  140,  115,
+   "C",  120,  125
+)
+
+# However, we want our new (tidy) dataset to have three variables: 
+# 1. id (which already exists)
+# 2. measurement (the column names) 
+# 3. value (the cell values)
+
+df |> 
+  pivot_longer(
+    cols = bp1:bp2,
+    names_to = "measurement",
+    values_to = "value"
+  )
+```
+
+``` {r pivoting wider}
+# Widening is essentially the opposite of lengthening and we do so by using the function pivot_wider(). pivot_wider() allows us to handle an observation if it is scattered across multiple rows.
+
+cms_patient_experience |> 
+  distinct(measure_cd, measure_title)
+
+# pivot_wider() has the opposite interface to pivot_longer(): instead of choosing new column names, we need to provide the existing columns that define the values (values_from) and the column name (names_from):
+
+cms_patient_experience |> 
+  pivot_wider(
+    names_from = measure_cd,
+    values_from = prf_rate
+  )
+
+#To understand what pivot_wider() does to our data, let’s once again use a simple example. This time we have two patients with id s A and B, and we have three blood pressure (bp) measurements from patient A and two from patient B:
+
+df <- tribble(
+  ~id, ~measurement, ~value,
+  "A",        "bp1",    100,
+  "B",        "bp1",    140,
+  "B",        "bp2",    115, 
+  "A",        "bp2",    120,
+  "A",        "bp3",    105
+)
+
+# We’ll take the names from the measurement column using the names_from() argument and the values from the value column using the values_from() argument:
+
+df |> 
+  pivot_wider(
+    names_from = measurement,
+    values_from = value
+  )
+
+df |> 
+  distinct(measurement) |> 
+  pull()
+
+df |> 
+  select(-measurement, -value) |> 
+  distinct()
+
+df |> 
+  select(-measurement, -value) |> 
+  distinct() |> 
+  mutate(x = NA, y = NA, z = NA)
+```
+
+# Separating and uniting data tables
+``` {r separating}
+# We need to split the rate column up into two variables: 1) cases and 2) population. separate() will take the name of the column we want to split and the names of the columns we want it split into. See the code below:
+
+table3 %>% 
+  separate(rate, into = c("cases", "population"))
+
+table3 %>% 
+  separate(rate, into = c("cases", "population"), sep = "/")
+
+# If you wish to use a specific character to separate a column, you can pass the character to the sep argument of separate(). For example, we could rewrite the code above as:
+
+table3 %>% 
+  separate(rate, into = c("cases", "population"), sep = "/")
+
+#Notice the data types in table3 above. Both cases and population are listed as character (<chr>) types. This is a default of using separate(). However, since the values in those columns are actually numbers, we want to ask separate() to convert them to better types using convert = TRUE. Now you can see they are listed as integer types(<int>)
+
+table3 %>% 
+  separate(rate, into = c("cases", "population"), convert = TRUE)
+
+# You can use this arrangement to separate the last two digits of each year. This makes this data less tidy, but is useful in other cases, as you’ll see in a little bit.
+
+table3 %>% 
+  separate(year, into = c("century", "year"), sep = 2)
+
+```
+```{r using unite}
+#To perform the inverse of separate() we will use unite() to combine multiple columns into a single column. In the example below for table5, we use unite() to rejoin century and year columns. unite() takes a data frame, the name of the new variable and a set of columns to combine using dplyr::select(). 
+
+table5 %>% 
+  unite(new, century, year, sep = "")
+
+# Here we need to add sep ="" because we don’t want any separator (the default is to add an underscore _)
+```
+
+# Handling missing values
+``` {r missing values}
+# A common use for missing values is as a data entry convenience. When data is entered by hand, missing values sometimes indicate that the value in the previous row has been repeated (or carried forward):
+
+treatment <- tribble(
+  ~person,           ~treatment, ~response,
+  "Derrick Whitmore", 1,         7,
+  NA,                 2,         10,
+  NA,                 3,         NA,
+  "Katherine Burke",  1,         4
+)
+
+# You can fill in these missing values with tidyr::fill(). It works like select(), taking a set of columns:
+
+treatment |>
+  fill(everything())
+```
+
+```{r fixed values}
+# Sometimes missing values represent some fixed and known value, most commonly 0. You can use dplyr::coalesce() to replace them:
+
+x <- c(1, 4, 5, 7, NA)
+coalesce(x, 0) # this inserts 0 instead of N/A
+
+# And sometimes you’ll encounter the opposite problem where some other concrete value actually represents a missing value. This typically happens when data is generated from an older software that can’t properly represent missing values so it uses something like 99 or -999 in place of the missing value. You can fix this with dplyr::na_if():
+
+x <- c(1, 4, 5, 7, -99)
+na_if(x, -99)
+
+```
+```{r NaN}
+x <- c(NA, NaN)
+x * 10
+x == 1
+is.na(x)
+```
+```{r Implicit missing values}
+# Here’s another example where if we pivot stocks wider to put the quarter in the columns, both missing values become explicit:
+
+stocks <- tibble(
+  year  = c(2020, 2020, 2020, 2020, 2021, 2021, 2021),
+  qtr   = c(   1,    2,    3,    4,    2,    3,    4),
+  price = c(1.88, 0.59, 0.35,   NA, 0.92, 0.17, 2.66)
+)
+
+stocks |>
+  pivot_wider(
+    names_from = qtr, 
+    values_from = price
+  )
+
+```
+
+# Importing data in R
+
+Some things to note:
+1. The first row or “header row” gives the column names
+2. The following six rows provide the data. 
+
+To read your .csv file into R use read_csv() from the readr package, which comes installed with the tidyverse. When using the read_csv() function, the first argument is the path to the file on your computer. This is super important! Think about the path as the “address” to the file, as in, where does it live on your computer? You can copy this address from windows explorer by clicking on the navigation bar at the top. 
+
+Also note R’s peculiar use of slashes - to import data you need to use forward slashes (‘/’) or a double backlash (‘\\’). 
+
+``` {r importing data}
+# EXAMPLE: 
+# ? read_csv
+# students <- read_csv("C://data/students.csv")
+
+```
+
+
+
+
+
+
+
+
+
+
+
