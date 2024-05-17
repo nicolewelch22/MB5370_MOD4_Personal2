@@ -16,16 +16,46 @@ knitr::opts_chunk$set(echo = TRUE)
 library("tidyverse")
 ```
 
-#set working directory
-```{r working directory}
-setwd("C:/Users/Welch/OneDrive/Desktop/Module 4/github/MB5370_MOD4_Personal2/data")
-```
-
 #read in data
 ```{r read data}
-data <- read.delim("Exercise2_Module04.txt")
+data <- read.delim("../data/Exercise2_Module04.txt")
 data
 
 str(data)
 
 ```
+
+# Setting facotrs
+```{r factors}
+data$Area <- factor(data$Area)
+data$Year <- factor(data$Year)
+data$Species <- factor(data$Species)
+
+```
+
+``` {r data}
+Species <- data |>
+  group_by(Year, Species) |>
+  summarize(avg_species = mean(count), 
+           SE = sd(count)/sqrt(length(count)) )
+
+```
+
+```{r plot}
+Plot <- 
+  ggplot(Species, aes(Year, y = avg_species, color = Species)) +
+  geom_pointrange(aes(ymin = avg_species-SE, ymax = avg_species+SE))+
+  scale_color_manual(values = c("blue", "forestgreen"))+
+  xlab("Year") +
+  ylab("Average Species")+
+  facet_wrap(~ Species,, scales = "free_y")
+
+ggsave(filename = "../output/FinalPlot.jpg", plot = Plot)
+
+# can create insets
+# Turtles are significantly lower caught in drum lines 
+# slight similarities in the variance 
+
+```
+
+scale = freey, varability in time 
