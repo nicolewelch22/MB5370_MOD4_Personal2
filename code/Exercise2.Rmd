@@ -26,4 +26,6 @@ setwd("C:/Users/Welch/OneDrive/Desktop/Module 4/github/MB5370_MOD4_Personal2/dat
 data <- read.delim("Exercise2_Module04.txt")
 data
 
+str(data)
+
 ```
