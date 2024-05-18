@@ -266,6 +266,10 @@ Also note R’s peculiar use of slashes - to import data you need to use forward
 # ? read_csv
 # students <- read_csv("C://data/students.csv")
 
+library(readr)
+copepods_raw <- read_csv("Data_For_Class/copepods_raw.csv")
+View(copepods_raw)
+
 ```
 
 

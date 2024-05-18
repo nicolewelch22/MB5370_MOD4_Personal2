@@ -1,0 +1,35 @@
+---
+title: "MB5370 Module 04. Assignment: End-to-end data analysis in R"
+author: "Nicole Welch"
+output: html_document
+date: "2024-05-16"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+# Install and load packages
+```{r Packages}
+# install and load your packages
+install.packages("sf") 
+install.packages("terra")
+install.packages("tmap")
+
+
+#load into R library
+library(tidyverse)
+library(sf) # simple features
+library (terra) # for raster
+library(tmap) # Thematic maps are geographical maps in which spatial data distributions are visualized
+```
+
+# Loading data
+``` {r loading data}
+#load the copepod data into R studio
+library(readr)
+dat <- read_csv("data-for-course/copepods_raw.csv")
+dat
+
+```
