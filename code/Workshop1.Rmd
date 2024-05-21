@@ -1,6 +1,6 @@
 ---
 title: "MB5370 Module 04. Workshop 1 - Introduction"
-author: "Ben Cresswell"
+author: "Nicole Welch"
 output: html_document
 date: "2024-03-22"
 ---
@@ -9,22 +9,42 @@ date: "2024-03-22"
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+# Github
+``` {r git}
+#Creating a github token
+usethis::create_github_token()
+
+# Introducing myself to Git
+library(usethis)
+use_git_config(user.name = "nicolewelch22", user.email = "welchn22@gmail.com")
+
+#install.packages("usethis")
+credentials::git_credential_ask()
+usethis::git_sitrep()
+
+# Entering token as credential 
+gitcreds::gitcreds_set()
+
+#  Getting Git and GitHub talking to each other (Pushing)
+usethis::use_github()
+
+```
 
 # Install and load tidyverse packages
-```{r}
+```{r tidyverse}
 ## install.packages("tidyverse") # Delete this line once installed
 library("tidyverse")
 ```
 
 
 # Load the data (mpg is built into ggplot2)
-```{r}
+```{r loading data}
 data(mpg)
 ```
 
 
 # Quick data checks
-```{r}
+```{r data check}
 head(mpg)
 glimpse(mpg)
 summary(mpg)
@@ -32,53 +52,45 @@ summary(mpg)
 
 
 # Create first plot
-```{r}
+```{r plot}
 ggplot(data = mpg) + 
   geom_point(mapping = aes(x = disp, y = hwy))
+
+
+#The plot shows a negative relationship between engine size (displ) and fuel efficiency (hwy). In other words, cars with big engines use more fuel. What does this say about fuel efficiency and engine size?
 ```
 
-The plot shows a negative relationship between engine size (displ) and fuel efficiency (hwy). In other words, cars with big engines use more fuel. What does this say about fuel efficiency and engine size?
-
-
-
 # Understanding grammar of graphics
-What happens if we just try to run ggplot on its own?
-```{r}
+```{r grammar}
 ggplot() 
 # Or with just the data specified?
 ggplot(data = mpg)
 ```
 
-We need to map some aesthetics!!
-
 # When you’re creating a plot, you essentially need two attributes of a plot: a geom and aesthetics.
-```{r}
+```{r aesthetics}
 ggplot(data = mpg) + 
   geom_point(mapping = aes(x = displ, y = hwy, colour = class))
 ```
 
-
-# Change point colour by class:
-```{r}
+# Change point color by class:
+```{r color by class}
 ggplot(data = mpg) + 
   geom_point(mapping = aes(x = displ, y = hwy, colour = class))
 ```
 
 # Change point size by class:
-```{r}
+```{r size by class}
 ggplot(data = mpg) + 
   geom_point(mapping = aes(x = displ, y = hwy, size = class))
+# Warning: Using size for a discrete variable is not advised. 
 ```
-Note the warning!!!
-
 
 # Change transparency (alpha) by class
-```{r}
+```{r alpha}
 ggplot(data = mpg) + 
   geom_point(mapping = aes(x = displ, y = hwy, alpha = class))
 ```
-Another warning!!
-Question: When would using alpha (or size be appropriate??)
 
 # Change point shape by class:
 ```{r}
@@ -87,181 +99,114 @@ ggplot(data = mpg) +
 ```
 
 
-# Make all points blue
+# Make all points pale turqouise
 ```{r}
 ggplot(data = mpg) + 
-  geom_point(mapping = aes(x = displ, y = hwy), color = "blue")
+  geom_point(mapping = aes(x = displ, y = hwy), color = "paleturquoise")
 ```
 
 
 # Troubleshooting 
-
-
-
-
-
+```{r troubleshoot}
+# ggplot(data = mpg) 
+# + geom_point(mapping = aes(x = displ, y = hwy)) 
+# the + should be on top line
+```
 
 # Faceting
-
-## facet_wrap
-Split the plot out by car type (class)
-```{r}
+```{r facets}
+# For discrete variables, facet_wrap(), ~ dictates which variable you want to subset your data with 
 ggplot(data = mpg) + 
   geom_point(mapping = aes(x = displ, y = hwy)) + 
   facet_wrap(~ class, nrow = 2)
-```
 
-
-## facet_grid
-A separate facet for each combination of drive-type (e.g. 4WD) * number of cylinders
-```{r}
+# facet with more then one variable, facet_grid(), Two variables using ~ to split them 
 ggplot(data = mpg) + 
   geom_point(mapping = aes(x = displ, y = hwy)) + 
   facet_grid(drv ~ cyl)
-```
-Note that there are no occurrences of 5 cylinder 4WDs OR RWD vehicles!
 
-
-## facet_grid by just row (or column)
-```{r}
+# use a . if you do not want to facet in the rows or column dimension
 ggplot(data = mpg) + 
   geom_point(mapping = aes(x = displ, y = hwy)) + 
-  facet_grid(cyl ~ .)
-  #facet_grid(. ~ cyl) # Alternatively
-
+  facet_grid(. ~ cyl)
 ```
-
-# Exercise:
-Read ?facet_wrap. What does nrow do? What does ncol do? What other options control the layout of the individual panels? 
-
-```{r}
-
-```
-
 
 # Lines
-We already used points:
-```{r}
+```{r smooth lines}
 ggplot(data = mpg) + 
-  geom_point(mapping = aes(x = displx, y = hwy))
-```
+  geom_point(mapping = aes(x = displ, y = hwy))
 
-
-However, ggplot2 can use a variety of geom objects to represent the data. Here, we might want to use bar plots, line charts, boxplots and so on. Well we can handle this issue in ggplot directly using a different geom to plot the same data. Here, instead of plotting points, we will use a smooth line. 
-
-# To display the same data as a smooth line fit through the points use geom_smooth().
-```{r}
+# straight line
 ggplot(data = mpg) + 
   geom_smooth(mapping = aes(x = displ, y = hwy))
-```
-### Question: whey don't we use geom_line() here? What would that look like? ###
 
-
-So let’s recap. A geom is an object that your plot uses to represent the data. To change the geom type in your plot, simply change the geom function that you add to your plot template. Sometimes you may want to try a few things out, in which case you could use comments to help you remember what worked and what didn’t. 
-
-## Using comments (#)
-```{r}
+# changing geom type in my plot
 ggplot(data = mpg) + 
-  #geom_point(mapping = aes(x = displ, y = hwy)) + # points horrible 
-  geom_smooth(mappings = aes(x = displ, y = hwy)) # try smooth line
-```
+  #  geom_point(mapping = aes(x = displ, y = hwy)) # points horrible 
+  geom_smooth(mapping = aes(x = displ, y = hwy)) # try smooth line, 'fixed mappings'
 
-Question: how does R work out where to plot the line??? Can use the chunk output to inform us. Can also use the help menu.
-
-# Changing linetype
-```{r}
+# change line type 
 ggplot(data = mpg) + 
-  geom_smooth(mapping = aes(x = displ, y = hwy, linetype = drv)) # Can also use "lty = " for the same result
-```
+  geom_smooth(mapping = aes(x = displ, y = hwy, linetype = drv))
 
-
-# Grouping
-```{r}
+# setting group aesthetic to a categorical variable to draw multiple objects
 ggplot(data = mpg) +
   geom_smooth(mapping = aes(x = displ, y = hwy, group = drv))
-```
- 
-# Change line colour based on drv value
-```{r}
+
+# Changing color based on drv value
 ggplot(data = mpg) +
   geom_smooth(
     mapping = aes(x = displ, y = hwy, color = drv),
     show.legend = FALSE,
   )
-```
+
+# Notes: 
+  # So let’s recap. A geom is an object that your plot uses to represent the data. To change the geom type in your plot, simply change the geom function that you add to your plot template. Sometimes you may want to try a few things out, in which case you could use comments to help you remember what worked and what didn’t. 
+
+```  
 
 # Multiple geoms
-We already did this one way
 ```{r}
+#Showing underlying data and how it relates to the geom_smooth line
 ggplot(data = mpg) + 
-  geom_point(mapping = aes(xx = displ, y = hwy)) +
+  geom_point(mapping = aes(x = displ, y = hwy)) +
   geom_smooth(mapping = aes(x = displ, y = hwy))
-```
 
-A better way...
-```{r}
+# more efficient than code above, easier to change a variable that you are plotting 
 ggplot(data = mpg, mapping = aes(x = displ, y = hwy)) + 
   geom_point() + 
   geom_smooth()
-```
 
-
-# Can still manipulate each geom/layer separately:
-```{r}
+# using mappings under ggplot to reduce duplication in code, helpful for changing point styles or the development of your own customization
 ggplot(data = mpg, mapping = aes(x = displ, y = hwy)) + 
   geom_point(mapping = aes(color = class)) + 
   geom_smooth()
-```
 
-Now we have different colours to indicate the raw data (geom_point) and one colour for the overall relationship (geom_smooth). Neat!
-
-
-```{r}
+# Specifying different data for each layer 
+ggplot(data = mpg, mapping = aes(x = displ, y = hwy)) + 
+  geom_point(mapping = aes(color = class)) + 
+  geom_smooth(data = filter(mpg, class == "subcompact"), se = FALSE)
 ggplot(data = mpg, mapping = aes(x = displ, y = hwy)) + 
   geom_point(mapping = aes(color = class)) + 
   geom_smooth(data = filter(mpg, class == "subcompact"), se = FALSE)
 ```
-Question: what does the "se = FALSE" do?
-
-
-# Exercise:
-1.  What geom would you use to draw a line chart? A boxplot? A histogram? An area chart?
-2.  Run this code in your head and predict what the output will look like. Then, run the code in R and check your predictions.
-
-```{r}
-
-```
-
-
-3.  Will these two graphs look different? Why/why not?
-```{r}
-ggplot(data = mpg, mapping = aes(x = displ, y = hwy)) + 
-  geom_point() + 
-  geom_smooth()
-
-ggplot() + 
-  geom_point(data = mpg, mapping = aes(x = displ, y = hwy)) + 
-  geom_smooth(data = mpg, mapping = aes(x = displ, y = hwy))
-```
-
 
 # Transformations and stats
 
 ## Load data
-```{r}
+```{r load data}
 data("diamonds")
 glimpse(diamonds)
 ```
 
 # Bar plot
-```{r}
+```{r bar plot}
 ggplot(data = diamonds) + 
   geom_bar(mapping = aes(x = cut))
 ```
 
 # Overriding defaults
-Make some new data
-```{r}
+```{r overriding defaults}
 demo <- tribble(
   ~cut,         ~freq,
   "Fair",       1610,
@@ -271,27 +216,21 @@ demo <- tribble(
   "Ideal",      21551
 )
 demo
-```
 
-
-```{r}
 ggplot(data = demo) +
   geom_bar(mapping = aes(x = cut, y = freq), stat = "identity")
-```
-Question: Why did we specify now specify a y axis?
 
 # What if we want to know the proportion rather than the absolute frequency?
-```{r}
 ggplot(data = diamonds) + 
   geom_bar(mapping = aes(x = cut, y = stat(prop), group = 1))
+
+#Warning: `stat(prop)` was deprecated in ggplot2 3.4.0.
+#If so, can use # geom_bar(mapping = aes(x = cut, y = stage(after_stat = prop), group = 1))
 ```
 
-Question: does anyone get the warning that's in the workbook?
-Warning: `stat(prop)` was deprecated in ggplot2 3.4.0.
-If so, can use # geom_bar(mapping = aes(x = cut, y = stage(after_stat = prop), group = 1))
 
-# Plotting statistical details
-```{r}
+# Plotting statistical details with error bars
+```{r error bars}
 ggplot(data = diamonds) + 
   stat_summary(
     mapping = aes(x = cut, y = depth),
@@ -303,78 +242,36 @@ ggplot(data = diamonds) +
 
 
 # Aesthetic adjustments adjustments
-Another way to boost the way you can convey information with plots using ggplot2 is to use aesthetics like colour or fill to change aspects of bar colours. We already did this once, but there are multiple options available to you, including changing the fill our outline colours.
-
-```{r}
+```{r aesthetics}
 ggplot(data = diamonds) + 
-  geom_bar(mapping = aes(x = cut, colour = cut))
+  geom_bar(mapping = aes(x = cut, colour = cut)) # border
 ggplot(data = diamonds) + 
-  geom_bar(mapping = aes(x = cut, fill = cut))
-```
-Question: Does anyone notice anything different in the colour scheme of this plot?
-(Hint: It's in the viridis colour palette (colour blind friendly), but why is it different from the colour palette we used earlier?)
-Check out the difference:
-```{r}
-ggplot(data = mpg, mapping = aes(x = displ, y = hwy)) + 
-  geom_point(mapping = aes(color = class)) 
+  geom_bar(mapping = aes(x = cut, fill = cut)) # fill
 
-ggplot(data = diamonds, mapping = aes(x = color, y = depth)) + 
-  geom_point(mapping = aes(color = cut)) 
-```
-
-
-# Filling by a variable
-Now try using these aesthetics to colour by another variable like clarity. Notice how the stacking is done automatically. This is done behind the scenes with a position argument.
-```{r}
+# color by another variable
 ggplot(data = diamonds) + 
   geom_bar(mapping = aes(x = cut, fill = clarity))
-```
 
+# position adjustments to customize your plots with raw data, change heights, and dodge
+# To alter transparency (alpha)
 
 # To alter transparency (alpha)
-```{r}
 ggplot(data = diamonds, mapping = aes(x = cut, fill = clarity)) + 
   geom_bar(alpha = 1/5, position = "identity")
-```
-
 
 # To color the bar outlines with no fill color
-```{r}
 ggplot(data = diamonds, mapping = aes(x = cut, colour = clarity)) + 
   geom_bar(fill = NA, position = "identity")
-```
 
-
-# Position adjustments
-position = "fill" works like stacking, but makes each set of stacked bars the same height.
-```{r}
+# Stacking, out of a count of 1
 ggplot(data = diamonds) + 
   geom_bar(mapping = aes(x = cut, fill = clarity), position = "fill")
-```
 
-
-# position = "dodge" 
-Places overlapping objects directly beside one another.
-```{r}
+# Overlapping object directly beside one another 
 ggplot(data = diamonds) + 
-  geom_bar(mapping = aes(x = cut, fill = clarity), position = "dodge")
-```
+geom_bar(mapping = aes(x = cut, fill = clarity), position = "dodge")
 
-# Jittering
-position = "jitter" adds a small amount of random noise to each point to avoid overplotting when points overlap. This is useful for scatterplots but not barplots.
-```{r}
+# 'Jitter' adds a small amount of random noise to each point to avoid overplotting when points overlap. This is useful for scatterplots but not barplots.
 ggplot(data = mpg) + 
-  #geom_point(mapping = aes(x = displ, y = hwy), position = "jitter")
-  geom_point(mapping = aes(x = displ, y = hwy))
+  geom_point(mapping = aes(x = displ, y = hwy), position = "jitter")
 ```
-
-
-
-
-
-
-
-
-
-
-
