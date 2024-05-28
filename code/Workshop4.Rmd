@@ -29,7 +29,157 @@ library(tmap) # Thematic maps are geographical maps in which spatial data distri
 ``` {r loading data}
 #load the copepod data into R studio
 library(readr)
-dat <- read_csv("data-for-course/copepods_raw.csv")
-dat
+copepods_raw <- read_csv("data/Data_For_Class/copepods_raw.csv")
+View(copepods_raw)
+
+dat <- copepods_raw
 
 ```
+
+``` {r check coordinates}
+library(ggplot2)
+ggplot(dat) + 
+  aes(x = longitude, y = latitude, color = richness_raw) +
+  geom_point()
+
+ggplot(dat, aes(x = latitude, y = richness_raw)) + 
+  stat_smooth() + 
+  geom_point()
+```
+
+``` {r getting along with maps}
+#Turning data into a 'simple features collection'
+sdat <- st_as_sf(dat, coords = c("longitude", "latitude"), 
+                 crs = 4326)
+
+?st_as_sf
+```
+
+```{r coordinate reference systems}
+crs4326 <- st_crs(4326)
+crs4326 # look at the whole CRS
+crs4326$Name # pull out just the name of the crs
+crs4326$wkt # crs in well-known text format
+
+sdat
+
+```
+
+``` {r Cartography}
+plot(sdat["richness_raw"])
+
+# Here we have only plotted the richness column. If we used plot(sdat) it would create a panel for every variable in our dataframe. In sf, we can use square brackets ["richness_raw"] to select a single variable.
+
+plot(sdat)
+
+```
+
+# Thematic maps for communication
+``` {r tmap}
+#  tmap works similarly to ggplot2 in that we build and add on layers. Here we only have one layer from sdat. We declare the layer with tm_shape() (in this case sdat), then the plot type with the following command.
+
+
+tm_shape(sdat) + 
+  tm_dots(col = "richness_raw")
+
+# Use tmap_save to save the map to your working directory. Remember to change the output path if you need to save it to a different folder.
+```
+
+# Mapping spatial polygons as layers
+``` {r shapefiles}
+library(sf)
+aus <- st_read("C:/Users/Welch/OneDrive/Desktop/Module 4/github/MB5370_MOD4_Personal2/data/Data_For_Class/spatial-data/Aussie/Aussie.shp")
+
+shelf <- st_read("C:/Users/Welch/OneDrive/Desktop/Module 4/github/MB5370_MOD4_Personal2/data/Data_For_Class/spatial-data/aus_shelf/aus_shelf.shp")
+
+# check out the data by typing the object names and reviewing the output in the console:
+aus
+```
+
+# Mapping your polygons
+```{r polygons}
+tm_shape(shelf) + 
+  tm_polygons()
+
+tm_shape(shelf, bbox = sdat) + 
+  tm_polygons() +
+  tm_shape(aus) + 
+  tm_polygons() + 
+  tm_shape(sdat) + 
+  tm_dots()
+
+```
+
+# Exploring t-map
+```{r explore tmap}
+# Now is your turn to explore the tmap package and try customizing your map. Remember, errors may be frustrating but they are a great way to learn! Use ?tmap in R studio to see what the package has to offer.
+
+# To learn about a quick way to change the style, type tmap_style("beaver") then run your map code again. This function is similar to ggplot themes, and will allow you to style your maps in a way you find effective for best communicating your findings. Even better, it allows you to add your own personal touch to your maps made in R. 
+
+# Now open the tmap vignette. It can be accessed via coding or web search ‘r tmap’.
+
+vignette('tmap-getstarted')
+
+library(tmap)
+data("World")
+
+# A good place to start is to create a map of the world. After installing tmap, the following lines of code should create the map shown below:
+tm_shape(World) +
+    tm_polygons("HPI")
+
+# Interactive maps
+# Each map can be plotted as a static image or viewed interactively using "plot" and "view" modes, respectively. The mode can be set with the function tmap_mode, and toggling between the modes can be done with the ‘switch’ ttm() (which stands for toggle thematic map.
+tmap_mode("view")
+
+tm_shape(World) +
+    tm_polygons("HPI")
+
+# Multiple shapes and layers
+data(World, metro, rivers, land)
+
+tmap_mode("plot")
+## tmap mode set to plotting
+tm_shape(land) +
+    tm_raster("elevation", palette = terrain.colors(10)) +
+tm_shape(World) +
+    tm_borders("white", lwd = .5) +
+    tm_text("iso_a3", size = "AREA") +
+tm_shape(metro) +
+    tm_symbols(col = "red", size = "pop2020", scale = .5) +
+tm_legend(show = FALSE)
+
+# Facets
+
+#Facets can be created in three ways:
+
+# 1. By assigning multiple variable names to one aesthetic (in this example the first argument of tm_polygons:
+tmap_mode("view")
+tm_shape(World) +
+    tm_polygons(c("HPI", "economy")) +
+    tm_facets(sync = TRUE, ncol = 2)
+
+# 2. By splitting the spatial data with the by argument of tm_facets:
+tmap_mode("plot")
+## tmap mode set to plotting
+
+data(NLD_muni)
+
+NLD_muni$perc_men <- NLD_muni$pop_men / NLD_muni$population * 100
+
+tm_shape(NLD_muni) +
+    tm_polygons("perc_men", palette = "RdYlBu") +
+    tm_facets(by = "province")
+
+# 3. By using the tmap_arrange function:
+tmap_mode("plot")
+## tmap mode set to plotting
+
+data(NLD_muni)
+tm1 <- tm_shape(NLD_muni) + tm_polygons("population", convert2density = TRUE)
+tm2 <- tm_shape(NLD_muni) + tm_bubbles(size = "population")
+
+tmap_arrange(tm1, tm2)
+```
+
+ 
+ 

@@ -1,0 +1,48 @@
+---
+title: "MB5370 Module 04. Workshop 2 - Using ggplot2 for communication"
+author: "Nicole Welch"
+output: html_document
+date: "2024-03-22"
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r set working directory}
+#set working directory
+# setwd("C:/Users/Welch/OneDrive/Desktop/Module 4/github/MB5370_MOD4_Personal2/data")
+#read in data
+# data <- read.delim("data.txt")
+data
+
+str(data)
+```
+
+```{r setting factors}
+
+
+data$gear <- factor(data$gear)
+data$scenario <- factor(data$scenario)
+
+```
+
+```{r tidyverse}
+
+library(tidyverse)
+
+```
+#making the graph better
+```{r deconstruction}
+p <- ggplot(data, aes(x=scenario, y=hours, width=.8)) + 
+  geom_bar(aes(fill=gear), position=position_dodge(width = 0.9), stat="identity") +
+  geom_errorbar(aes(group = gear, x=scenario, ymin=hours-SE, ymax=hours+SE), position=position_dodge(width = 0.9), stat="identity", width=0.2, colour="grey50", alpha=0.9) +
+  theme(panel.background = element_rect(fill = "white", colour = "grey50"),
+        legend.box.margin = margin(6, 6, 6, 6)) +
+  scale_fill_manual(values = c("paleturquoise", "lightsalmon"))+
+  scale_color_manual(values =c ("black", "black"))+
+  xlab("Scenario") +
+  ylab("Hours at sea")
+
+p + labs(fill= "Gear-type")
+
+```
